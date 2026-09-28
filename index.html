@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>橙紫组合的时光</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'PingFang SC','Microsoft YaHei',sans-serif;background:linear-gradient(135deg,#ffecd2,#e1bee7);min-height:100vh;display:flex;justify-content:center;align-items:center;color:#5d4037;padding:20px 0}
+#falling-container{position:fixed;inset:0;pointer-events:none;z-index:0}
+.container{position:relative;z-index:1;width:380px;max-width:92%;display:flex;flex-direction:column;gap:14px;padding-bottom:30px}
+.page-title{text-align:center;font-size:1.7rem;font-weight:normal;letter-spacing:3px;color:#9c27b0}
+.card{background:rgba(255,255,255,.65);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-radius:20px;padding:18px 20px;box-shadow:0 8px 32px rgba(31,38,135,.13);border:1px solid rgba(255,255,255,.18)}
+.days-card{text-align:center}
+.card-title{font-size:1.05rem;color:#ff9800;margin-bottom:6px}
+.days-count{font-size:3.4rem;font-weight:bold;color:#9c27b0;line-height:1;margin:6px 0;animation:breathe 3s infinite ease-in-out}
+.days-sub{font-size:.9rem;color:#a1887f;margin-top:2px}
+.start-note{margin-top:10px;padding-top:10px;border-top:1px dashed #e0cfc6;font-size:.8rem;color:#bcaaa4}
+@keyframes breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.03)}}
+.countdown-card{text-align:center}
+.countdown-label{font-size:.9rem;color:#a1887f}
+.countdown-name{font-size:1.15rem;color:#9c27b0;font-weight:bold;margin:6px 0 2px}
+.countdown-days{font-size:2rem;font-weight:bold;color:#ff9800}
+.calendar-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:6px}
+.calendar-select{background:rgba(255,255,255,.85);border:1px solid #e1bee7;border-radius:8px;padding:4px 6px;font-size:.88rem;color:#5d4037;cursor:pointer;outline:none;max-width:46%}
+.calendar-select:focus{border-color:#9c27b0}
+.calendar-nav{background:none;border:none;font-size:1.15rem;color:#9c27b0;cursor:pointer;padding:4px 8px}
+.calendar-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center}
+.calendar-weekday{font-size:.7rem;color:#a1887f;padding:4px 0}
+.calendar-day{font-size:.84rem;padding:5px 2px;border-radius:8px;cursor:pointer;transition:transform .18s;display:flex;flex-direction:column;align-items:center;min-height:40px}
+.calendar-day:hover{transform:scale(1.06)}
+.calendar-day.today{background:rgba(229,115,115,.15);color:#e57373;font-weight:bold}
+.calendar-day.milestone{background:linear-gradient(135deg,#64b5f6,#1976d2);color:#fff;font-weight:bold;box-shadow:0 2px 8px rgba(25,118,210,.3)}
+.calendar-day.birthday{background:linear-gradient(135deg,#ce93d8,#9c27b0);color:#fff;font-weight:bold;box-shadow:0 2px 8px rgba(156,39,176,.3)}
+.calendar-day.start{background:linear-gradient(135deg,#ffcc80,#ff9800);color:#fff;font-weight:bold;box-shadow:0 2px 8px rgba(255,152,0,.3)}
+.day-label{font-size:.5rem;margin-top:1px;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.milestone .day-label,.birthday .day-label,.start .day-label{color:rgba(255,255,255,.92)}
+.falling-item{position:absolute;top:-24px;font-size:20px;animation:fall linear forwards;opacity:.8}
+@keyframes fall{to{transform:translateY(110vh) rotate(360deg)}}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:100;justify-content:center;align-items:center}
+.modal-overlay.active{display:flex}
+.modal-content{background:#fff;border-radius:20px;padding:24px;max-width:90%;width:300px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.3);animation:modalIn .28s ease}
+@keyframes modalIn{from{transform:scale(.85);opacity:0}to{transform:scale(1);opacity:1}}
+.modal-date{font-size:1.25rem;color:#9c27b0;font-weight:bold;margin-bottom:10px}
+.modal-info{font-size:.95rem;color:#5d4037;line-height:1.9;margin-bottom:14px;white-space:pre-line}
+.modal-close{background:linear-gradient(to right,#ff9800,#9c27b0);color:#fff;border:none;padding:10px 28px;border-radius:20px;font-size:1rem;cursor:pointer}
+</style>
+</head>
+<body>
+<div id="falling-container"></div>
+<div class="container">
+  <h1 class="page-title">❤️ 橙紫组合 💜</h1>
+  <div class="card days-card">
+    <div class="card-title">宇成 ❤️ 紫曼</div>
+    <div class="days-count" id="days-together">0</div>
+    <div class="days-sub">我们已经在一起这么多天啦</div>
+    <div class="start-note">始于 2026年9月25日</div>
+  </div>
+  <div class="card countdown-card">
+    <div class="countdown-label">距离下一个纪念日还有</div>
+    <div class="countdown-name" id="cd-name">—</div>
+    <div class="countdown-days" id="cd-days">—</div>
+  </div>
+  <div class="card">
+    <div class="calendar-header">
+      <button class="calendar-nav" id="prev-month">◀</button>
+      <select class="calendar-select" id="year-select"></select>
+      <select class="calendar-select" id="month-select"></select>
+      <button class="calendar-nav" id="next-month">▶</button>
+    </div>
+    <div class="calendar-grid" id="calendar-grid"></div>
+  </div>
+</div>
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal-content">
+    <div class="modal-date" id="modal-date"></div>
+    <div class="modal-info" id="modal-info"></div>
+    <button class="modal-close" id="modal-close">关闭</button>
+  </div>
+</div>
+<script>
+const START = new Date('2026-09-25'); START.setHours(0,0,0,0);
+let cy = new Date().getFullYear(), cm = new Date().getMonth();
+
+const bdays = [{month:3,day:18,name:'宇成',emoji:'🍊'},{month:11,day:8,name:'紫曼',emoji:'💜'}];
+
+/* 初始化年份/月份下拉框（修复：之前漏掉这一步导致下拉为空） */
+function initSelectors(){
+  const ys = document.getElementById('year-select');
+  const ms = document.getElementById('month-select');
+  ys.innerHTML = ''; ms.innerHTML = '';
+  for(let y = START.getFullYear() - 2; y <= START.getFullYear() + 12; y++){
+    const o = document.createElement('option'); o.value = y; o.textContent = y + '年';
+    if(y === cy) o.selected = true; ys.appendChild(o);
+  }
+  for(let m = 1; m <= 12; m++){
+    const o = document.createElement('option'); o.value = m - 1; o.textContent = m + '月';
+    if(m - 1 === cm) o.selected = true; ms.appendChild(o);
+  }
+}
+
+function getAllEvents(){
+  const r = [];
+  r.push({date:new Date(START),label:'起点',type:'start'});
+  const mf = new Date(START); mf.setMonth(mf.getMonth()+1); mf.setHours(0,0,0,0);
+  r.push({date:mf,label:'满月纪念',type:'milestone',onlyYear:2026});
+  for(let i=1;i<=10;i++){const d=new Date(START);d.setDate(START.getDate()+i*100-1);d.setHours(0,0,0,0);r.push({date:d,label:i*100+'天',type:'milestone'});}
+  for(let i=1;i<=10;i++){const d=new Date(START);d.setFullYear(START.getFullYear()+i);d.setHours(0,0,0,0);r.push({date:d,label:i+'周年',type:'milestone'});}
+  return r;
+}
+
+function p(n){return String(n).padStart(2,'0')}
+function evKey(e){return e.date.getFullYear()+'-'+p(e.date.getMonth()+1)+'-'+p(e.date.getDate())}
+function todayKey(){const n=new Date();return n.getFullYear()+'-'+p(n.getMonth()+1)+'-'+p(n.getDate())}
+
+function getEvent(dateStr){
+  return getAllEvents().find(e=>{
+    if(e.onlyYear && e.onlyYear !== parseInt(dateStr.slice(0,4))) return false;
+    return evKey(e) === dateStr;
+  }) || null;
+}
+function getBday(m,d){return bdays.find(b=>b.month===m&&b.day===d)||null}
+function dayNum(date){return Math.floor((new Date(date).setHours(0,0,0,0)-START)/864e5)+1}
+
+function updateDays(){
+  const n=new Date();n.setHours(0,0,0,0);
+  document.getElementById('days-together').textContent=Math.max(1,Math.floor((n-START)/864e5)+1);
+}
+
+function renderCountdown(){
+  const n=new Date();n.setHours(0,0,0,0);
+  const list=getAllEvents();
+  for(const b of bdays){let y=n.getFullYear();let d=new Date(y,b.month-1,b.day);d.setHours(0,0,0,0);if(d<n){y++;d=new Date(y,b.month-1,b.day);d.setHours(0,0,0,0);}list.push({date:d,label:b.name+'的生日',type:'milestone'});}
+  let next=list.filter(e=>e.date>n).sort((a,b)=>a.date-b.date)[0];
+  if(!next){document.getElementById('cd-name').textContent='—';document.getElementById('cd-days').textContent='—';return;}
+  const diff=Math.round((next.date-n)/864e5);
+  document.getElementById('cd-name').textContent=next.label;
+  document.getElementById('cd-days').textContent=diff+' 天';
+}
+
+function renderCal(){
+  const g=document.getElementById('calendar-grid');g.innerHTML='';
+  document.getElementById('year-select').value=cy;
+  document.getElementById('month-select').value=cm;
+  ['日','一','二','三','四','五','六'].forEach(w=>{const e=document.createElement('div');e.className='calendar-weekday';e.textContent=w;g.appendChild(e)});
+  const fd=new Date(cy,cm,1).getDay(), dim=new Date(cy,cm+1,0).getDate(), tk=todayKey();
+  for(let i=0;i<fd;i++) g.appendChild(document.createElement('div'));
+  for(let d=1;d<=dim;d++){
+    const el=document.createElement('div');el.className='calendar-day';
+    const dk=cy+'-'+p(cm+1)+'-'+p(d);
+    const ns=document.createElement('span');ns.textContent=d;el.appendChild(ns);
+    if(dk===tk) el.classList.add('today');
+    const ev=getEvent(dk);
+    if(ev){el.classList.add(ev.type==='start'?'start':'milestone');const s=document.createElement('span');s.className='day-label';s.textContent=ev.label;el.appendChild(s);}
+    const bd=getBday(cm+1,d);
+    if(bd){el.classList.add('birthday');const s=document.createElement('span');s.className='day-label';s.textContent=bd.emoji+bd.name+'生日';el.appendChild(s);}
+    el.addEventListener('click',()=>{
+      const dn=dayNum(new Date(cy,cm,d));
+      let info='';
+      if(ev) info+='🎉 '+ev.label+'！\n';
+      if(bd) info+=bd.emoji+' '+bd.name+'的生日 🎂\n';
+      if(dn>0) info+='这是我们相爱的第 '+dn+' 天';
+      else info+='这是我们相爱之前的日子';
+      document.getElementById('modal-date').textContent=cy+'年'+(cm+1)+'月'+d+'日';
+      document.getElementById('modal-info').textContent=info;
+      document.getElementById('modal-overlay').classList.add('active');
+    });
+    g.appendChild(el);
+  }
+}
+function render(){renderCal();renderCountdown()}
+
+document.getElementById('prev-month').onclick=()=>{cm--;if(cm<0){cm=11;cy--}render()};
+document.getElementById('next-month').onclick=()=>{cm++;if(cm>11){cm=0;cy++}render()};
+document.getElementById('year-select').onchange=e=>{cy=+e.target.value;render()};
+document.getElementById('month-select').onchange=e=>{cm=+e.target.value;render()};
+document.getElementById('modal-close').onclick=()=>document.getElementById('modal-overlay').classList.remove('active');
+document.getElementById('modal-overlay').onclick=e=>{if(e.target===e.currentTarget)e.currentTarget.classList.remove('active')};
+
+(function(){const c=document.getElementById('falling-container'),s=['⭐','🌙','❤️','💜'];setInterval(()=>{const e=document.createElement('div');e.className='falling-item';e.textContent=s[Math.random()*s.length|0];e.style.left=Math.random()*100+'vw';e.style.animationDuration=(Math.random()*3+3)+'s';e.style.fontSize=(Math.random()*15+15)+'px';c.appendChild(e);setTimeout(()=>e.remove(),6200)},420)})();
+
+initSelectors(); updateDays(); render(); setInterval(()=>{updateDays();renderCountdown()},36e5);
+</script>
+</body>
+</html>
